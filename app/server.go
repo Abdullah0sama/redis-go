@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"strconv"
-	"strings"
 )
 
 func failOnErr(err error, str string) {
@@ -17,17 +15,18 @@ func failOnErr(err error, str string) {
 func handleConn(conn net.Conn) {
 
 	buff := make([]byte, 1024)
-	n, err := conn.Read(buff)
+	_, err := conn.Read(buff)
 
-	strArr := strings.Split(string(buff[:n]), "\r\n")
+	//strArr := strings.Split(string(buff[:n]), "\r\n")
 
-	// fmt.Print(len(strArr), strArr)
+	//fmt.Print(len(strArr), strArr)
 	if err != nil {
 		fmt.Println("Error reading sent data", err.Error())
 		os.Exit(1)
 	}
 
-	res := "$" + strconv.Itoa(len(strArr)-1) + "\r\n" + "PONG\r\n"
+	// res := "$" + strconv.Itoa(len(strArr)-1) + "\r\n" + "PONG\r\n"
+	res := "+" + "PONG\r\n"
 	writeBuffer := []byte(res)
 	_, err = conn.Write(writeBuffer)
 
