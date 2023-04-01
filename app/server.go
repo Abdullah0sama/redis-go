@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -15,29 +16,24 @@ func failOnErr(err error, str string) {
 }
 func handleConn(conn net.Conn) {
 
-	buff := make([]byte, 6)
-	for {
-		n, err := conn.Read(buff)
+	buff := make([]byte, 1024)
+	n, err := conn.Read(buff)
 
-		strArr := strings.Split(string(buff[:n]), "\r\n")
+	strArr := strings.Split(string(buff[:n]), "\r\n")
 
-		if len(strArr) > 0 && strArr[len(strArr)-1] == "\n" {
-			break
-		}
-		// fmt.Print(len(strArr), strArr)
-		if err != nil {
-			fmt.Println("Error reading sent data", err.Error())
-			os.Exit(1)
-		}
+	// fmt.Print(len(strArr), strArr)
+	if err != nil {
+		fmt.Println("Error reading sent data", err.Error())
+		os.Exit(1)
+	}
 
-		res := "+PONG\r\n"
-		writeBuffer := []byte(res)
-		_, err = conn.Write(writeBuffer)
+	res := "$" + strconv.Itoa(len(strArr)-1) + "\r\n" + "PONG\r\n"
+	writeBuffer := []byte(res)
+	_, err = conn.Write(writeBuffer)
 
-		if err != nil {
-			fmt.Println("Error writing data", err.Error())
-			os.Exit(1)
-		}
+	if err != nil {
+		fmt.Println("Error writing data", err.Error())
+		os.Exit(1)
 	}
 
 	// n, err = conn.Read(buff[:])
