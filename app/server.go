@@ -19,7 +19,7 @@ func failOnErr(err error, str string) {
 func parseCommand(command string) string {
 
 	list := strings.Split(command, "\r\n")
-	//fmt.Println(list)
+	fmt.Println(list)
 	numberOfCommand, err := strconv.Atoi(strings.TrimPrefix(list[0], "*"))
 	failOnErr(err, "Failed to parse")
 
@@ -29,9 +29,10 @@ func parseCommand(command string) string {
 		strOutput = append(strOutput, "*"+strconv.Itoa(numberOfCommand-1))
 		strOutput = append(strOutput, list[3:]...)
 
-	case "PING":
+	case "ping":
 		strOutput = []string{"+PONG\r\n"}
-
+	default:
+		fmt.Println("Something wrong happened")
 	}
 
 	// fmt.Println(strOutput)
