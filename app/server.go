@@ -19,13 +19,13 @@ func failOnErr(err error, str string) {
 func parseCommand(command string) string {
 
 	list := strings.Split(command, "\r\n")
-	fmt.Println(list)
+	// fmt.Println(list)
 	numberOfCommand, err := strconv.Atoi(strings.TrimPrefix(list[0], "*"))
 	failOnErr(err, "Failed to parse")
 
 	var strOutput []string
 	switch list[2] {
-	case "ECHO":
+	case "echo":
 		strOutput = append(strOutput, "*"+strconv.Itoa(numberOfCommand-1))
 		strOutput = append(strOutput, list[3:]...)
 
