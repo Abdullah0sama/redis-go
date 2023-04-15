@@ -20,14 +20,18 @@ func parseCommand(command string) string {
 
 	list := strings.Split(command, "\r\n")
 	// fmt.Println(list)
-	numberOfCommand, err := strconv.Atoi(strings.TrimPrefix(list[0], "*"))
+	_, err := strconv.Atoi(strings.TrimPrefix(list[0], "*"))
 	failOnErr(err, "Failed to parse")
 
 	var strOutput []string
-	switch list[2] {
+	switch strings.ToLower(list[2]) {
 	case "echo":
-		strOutput = append(strOutput, "*"+strconv.Itoa(numberOfCommand-1))
-		strOutput = append(strOutput, list[3:]...)
+
+		echoConcat := ""
+		for i := 4; i < len(list); i += 2 {
+			echoConcat += list[i]
+		}
+		strOutput = []string{"$" + strconv.Itoa(len(echoConcat)), "\r\n", echoConcat, "\r\n"}
 
 	case "ping":
 		strOutput = []string{"+PONG\r\n"}
@@ -35,9 +39,9 @@ func parseCommand(command string) string {
 		fmt.Println("Something wrong happened")
 	}
 
-	// fmt.Println(strOutput)
+	//fmt.Println(strOutput)
 
-	return strings.Join(strOutput, "\r\n")
+	return strings.Join(strOutput, "")
 }
 
 func handleConn(conn net.Conn) {
