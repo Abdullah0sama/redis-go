@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+var storage map[string]string
+
 func failOnErr(err error, str string) {
 	if err != nil {
 		fmt.Println(str, err.Error())
@@ -35,6 +37,18 @@ func parseCommand(command string) string {
 
 	case "ping":
 		strOutput = []string{"+PONG\r\n"}
+	case "set":
+		key, value := list[4], list[6]
+		storage[key] = value
+		strOutput = []string{"+OK\r\n"}
+	case "get":
+		key := list[4]
+		value, ok := storage[key]
+		if ok {
+			strOutput = []string{"+", value, "\r\n"}
+		} else {
+			strOutput = []string{"$-1\r\n"}
+		}
 	default:
 		fmt.Println("Something wrong happened")
 	}
@@ -70,6 +84,8 @@ func handleConn(conn net.Conn) {
 }
 
 func main() {
+	storage = make(map[string]string)
+
 	fmt.Println("Logs from your program will appear here!")
 	l, err := net.Listen("tcp", "0.0.0.0:6379")
 	failOnErr(err, "Fail to listen")
