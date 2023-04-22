@@ -9,8 +9,6 @@ import (
 	"strings"
 )
 
-var storage map[string]string
-
 func failOnErr(err error, str string) {
 	if err != nil {
 		fmt.Println(str, err.Error())
@@ -18,32 +16,46 @@ func failOnErr(err error, str string) {
 	}
 }
 
+func decode(command string) []string {
+
+	out := []string{}
+	commandParams := strings.Split(command, "\r\n")
+	switch command[0] {
+	case '*':
+		for i := 2; i < len(commandParams); i += 2 {
+			out = append(out, commandParams[i])
+		}
+	case '+':
+		out = append(out, commandParams[1])
+	}
+
+	return out
+}
+
 func parseCommand(command string) string {
 
-	list := strings.Split(command, "\r\n")
-	// fmt.Println(list)
-	_, err := strconv.Atoi(strings.TrimPrefix(list[0], "*"))
-	failOnErr(err, "Failed to parse")
-
+	commandDecoded := decode(command)
 	var strOutput []string
-	switch strings.ToLower(list[2]) {
+	// fmt.Println(commandDecoded)
+	switch strings.ToLower(commandDecoded[0]) {
 	case "echo":
-
-		echoConcat := ""
-		for i := 4; i < len(list); i += 2 {
-			echoConcat += list[i]
-		}
+		echoConcat := strings.Join(commandDecoded[1:], " ")
 		strOutput = []string{"$" + strconv.Itoa(len(echoConcat)), "\r\n", echoConcat, "\r\n"}
-
 	case "ping":
 		strOutput = []string{"+PONG\r\n"}
 	case "set":
-		key, value := list[4], list[6]
-		storage[key] = value
+		key, value := commandDecoded[1], commandDecoded[2]
+		var expiryTime int64 = -1
+		if len(commandDecoded) > 3 && strings.ToLower(commandDecoded[3]) == "px" {
+			parsedTime, _ := strconv.Atoi(commandDecoded[4])
+			expiryTime = int64(parsedTime)
+		}
+
+		storage.set(key, value, expiryTime)
 		strOutput = []string{"+OK\r\n"}
 	case "get":
-		key := list[4]
-		value, ok := storage[key]
+		key := commandDecoded[1]
+		value, ok := storage.get(key)
 		if ok {
 			strOutput = []string{"+", value, "\r\n"}
 		} else {
@@ -83,8 +95,10 @@ func handleConn(conn net.Conn) {
 	conn.Close()
 }
 
+var storage *Storage
+
 func main() {
-	storage = make(map[string]string)
+	storage = NewStorage()
 
 	fmt.Println("Logs from your program will appear here!")
 	l, err := net.Listen("tcp", "0.0.0.0:6379")
